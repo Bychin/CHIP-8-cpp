@@ -6,6 +6,7 @@
 #define CHIP_8_CPP_CHIP8_H
 
 #include <string>
+#include <random>
 
 
 class chip8 {
@@ -36,10 +37,10 @@ class chip8 {
     // CHIP-8 has black and white screen with 64x32 resolution (2048 pixels)
     uint8_t graphics[64 * 32];
 
+    std::mt19937 mt;
+
     chip8();
     ~chip8() = default;
-
-
 
 public:
     chip8(chip8 const&) = delete;
