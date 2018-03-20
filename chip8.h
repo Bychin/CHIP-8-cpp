@@ -35,7 +35,7 @@ class chip8 {
     uint8_t key[16]; // hex keyboard
 
     // CHIP-8 has black and white screen with 64x32 resolution (2048 pixels)
-    uint8_t graphics[64 * 32];
+    uint8_t graphics[64 * 32]{};
 
     std::mt19937 mt;
 

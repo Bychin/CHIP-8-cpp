@@ -15,8 +15,6 @@ chip8::chip8() {
 
     pc = 0x200;
 
-    // Clear display
-
     // Load fonts (starting point - 0x050 == 80)
     for (int i = 0; i < 80; ++i) {
         memory[i + 0x050] = fontset[i];
@@ -60,10 +58,10 @@ void chip8::EmulateCycle() {
     uint16_t nnn = opcode & 0xFFF;
 
     // TODO: make function pointers instead
-    if (w == 0) { // 0---
+    if (w == 0x0) { // 0---
         if (opcode == 0x00E0) { // Clears the screen
-            for (int i = 0; i < 2048; ++i)
-                graphics[i] = 0;
+            for (auto& pixel : graphics)
+                pixel = 0;
             draw_flag = true;
 
         } else if (opcode == 0x00EE) { // Returns from subroutine
@@ -72,26 +70,26 @@ void chip8::EmulateCycle() {
         } else { // 0NNN - Calls RCA 1802 program at NNN
             // Not necessary for most ROMs
         };
-    } else if (w == 1) { // 1NNN - Jumps to address NNN
+    } else if (w == 0x1) { // 1NNN - Jumps to address NNN
         pc = nnn;
-    } else if (w == 2) { // 2NNN - Calls subroutine at NN
+    } else if (w == 0x2) { // 2NNN - Calls subroutine at NN
         stack[sp] = pc;
         ++sp;
         pc = nnn;
-    } else if (w == 3) { // 3XNN - Skips the next instruction if (VX == NN)
+    } else if (w == 0x3) { // 3XNN - Skips the next instruction if (VX == NN)
         if (V[x] == nn)
             pc += 2;
-    } else if (w == 4) { // 4XNN - Skips the next instruction if (VX != NN)
+    } else if (w == 0x4) { // 4XNN - Skips the next instruction if (VX != NN)
         if (V[x] != nn)
             pc += 2;
-    } else if (w == 5) { // 5XY0 - Skips the next instruction if (VX == VY)
+    } else if (w == 0x5) { // 5XY0 - Skips the next instruction if (VX == VY)
         if (V[x] == V[y])
             pc += 2;
-    } else if (w == 6) { // 6XNN - Sets VX to NN
+    } else if (w == 0x6) { // 6XNN - Sets VX to NN
         V[x] = nn;
-    } else if (w == 7) { // 7XNN - Adds NN to VX
+    } else if (w == 0x7) { // 7XNN - Adds NN to VX
         V[x] += nn;
-    } else if (w == 8) { // 8---
+    } else if (w == 0x8) { // 8---
         if (z == 0x0) { // 8XY0 - Sets VX to VY
             V[x] = V[y];
         } else if (z == 0x1) { // 8XY1 - Sets VX to VX | VY
@@ -119,18 +117,18 @@ void chip8::EmulateCycle() {
             V[0xF] = V[y] >> 7;
             V[x] = (V[y] << 1);
         };
-    } else if (w == 9) { // 9---
+    } else if (w == 0x9) { // 9---
         if (z == 0x0) { // 9XY0 - Skips the next instruction if (VX != VY)
             if (V[x] != V[y])
                 pc += 2;
         };
-    } else if (w == 'A') { // ANNN - Sets NNN to I
+    } else if (w == 0xA) { // ANNN - Sets NNN to I
         I = nnn;
-    } else if (w == 'B') { // BNNN - Jumps to address NNN + V0
+    } else if (w == 0xB) { // BNNN - Jumps to address NNN + V0
         pc = nnn + V[0x0];
-    } else if (w == 'C') { // CXNN - Sets VX to rand() & NN
+    } else if (w == 0xC) { // CXNN - Sets VX to rand() & NN
         V[x] = std::uniform_int_distribution<uint8_t>(0, 255)(mt) & nn;
-    } else if (w == 'D') { // DXYN - Draws a sprite at [VX, VY] that has 8px width and Npx height
+    } else if (w == 0xD) { // DXYN - Draws a sprite at [VX, VY] that has 8px width and Npx height
         V[0xF] = 0x0;
         uint8_t pixel_x = V[x];
         uint8_t pixel_y = V[y];
@@ -139,13 +137,21 @@ void chip8::EmulateCycle() {
             uint8_t sprite_line = memory[I + line];
             uint16_t position = (pixel_y + line) * 64 + pixel_x;
             for (int i = 0; i < 8; ++i) {
-                // TODO
+                if ((sprite_line & (0x80 >> i)) != 0) {
+                    if(graphics[position + i] == 1)
+                        V[0xF] = 1;
+                    graphics[position + i] ^= 1;
+                }
             }
         }
         draw_flag = true;
-    } else if (w == 'E') { // E---
+    } else if (w == 0xE) { // E---
+        if (nn == 0x9E) { // EX9E - Skips the next instruction if (VX == key())
 
-    } else if (w == 'F') { // F---
+        } else if (nn == 0xA1) { // EXA1 - Skips the next instruction if (VX != key())
+
+        };
+    } else if (w == 0xF) { // F---
 
     }
 
