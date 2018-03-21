@@ -32,7 +32,7 @@ class chip8 {
     uint8_t delay_timer;
     uint8_t sound_timer;
 
-    uint8_t key[16]; // hex keyboard
+    uint8_t keys[16]; // hex keyboard // TODO change to std::bitset
 
     // CHIP-8 has black and white screen with 64x32 resolution (2048 pixels)
     uint8_t graphics[64 * 32]{};
